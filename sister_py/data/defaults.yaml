@@ -33,6 +33,25 @@ MATERIALS:
     thermal:
       k: 3.0
       cp: 1000
+  - phase: 2
+    name: "Upper Crust"
+    density:
+      rho0: 2700
+      alpha: 2.5e-5
+    rheology:
+      type: "ductile"
+      dislocation:
+        A: 1e-15
+        E: 300e3
+        n: 3.0
+    plasticity:
+      C: 20e6
+      mu: 0.6
+    elasticity:
+      G: 3e10
+    thermal:
+      k: 3.0
+      cp: 1000
 
 BC:
   top:

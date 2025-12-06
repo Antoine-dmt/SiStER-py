@@ -251,8 +251,8 @@ class TestFullConfig:
                 SIMULATION=SimulationConfig(Nt=100, dt_out=10, output_dir="./results"),
                 DOMAIN=DomainConfig(xsize=100e3, ysize=100e3),
                 GRID=GridConfig(
-                    x_spacing=[5000], x_breaks=[100e3],
-                    y_spacing=[5000], y_breaks=[100e3]
+                    x_spacing=[5000], x_breaks=[0, 100e3],
+                    y_spacing=[5000], y_breaks=[0, 100e3]
                 ),
                 MATERIALS=[
                     MaterialConfig(

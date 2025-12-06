@@ -1,0 +1,24 @@
+Metadata-Version: 2.4
+Name: sister-py
+Version: 0.1.0
+Summary: SiSteR-py: Staggered-grid Iterative Solver for the Earth's Rheology in Python
+Author-email: SiSteR-py Contributors <research@sister-py.org>
+License: MIT
+Project-URL: Homepage, https://github.com/user/sister-py
+Project-URL: Repository, https://github.com/user/sister-py.git
+Project-URL: Documentation, https://sister-py.readthedocs.io
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: pydantic>=2.0
+Requires-Dist: numpy>=1.21
+Requires-Dist: scipy>=1.7
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: sphinx>=7.0; extra == "docs"
+Requires-Dist: sphinx-rtd-theme>=1.0; extra == "docs"
