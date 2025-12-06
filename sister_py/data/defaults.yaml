@@ -9,9 +9,9 @@ DOMAIN:
 
 GRID:
   x_spacing: [5000]
-  x_breaks: [100e3]
+  x_breaks: [0, 100e3]
   y_spacing: [2000, 1000, 2000]
-  y_breaks: [30e3, 70e3]
+  y_breaks: [0, 30e3, 70e3, 100e3]
 
 MATERIALS:
   - phase: 1
