@@ -1,0 +1,161 @@
+PROJECT_CONTEXT:
+SiSteR-py follows the SiSteR MATLAB paradigm where a **single input file** 
+drives the entire simulation. We use YAML (not MATLAB .m) for accessibility 
+and maintainability. The ConfigurationManager must load, validate, and provide 
+access to all simulation parameters from a single YAML file.
+
+This component is CRITICAL for:
+- Easy package distribution (example configs included)
+- User accessibility (copy example YAML, modify parameters)
+- Reproducibility (config exported with outputs)
+- Extensibility (add new physics without code changes)
+
+DESIGN_PRINCIPLES:
+- Single-file input: `continental_rift.yaml` drives entire simulation
+- YAML format (not JSON) for human readability and comments
+- Validate all parameters on load (fail fast with clear messages)
+- Support sensible defaults (users override what they need)
+- Enable version control: config files tracked in git
+
+SPECIFICATION:
+Create `ConfigurationManager` class that:
+1. Loads YAML configuration files (pyyaml)
+2. Validates all parameters against schema (Pydantic v2)
+3. Creates Material objects from config MATERIALS section
+4. Creates boundary condition dict from config BC section
+5. Creates grid config dict from config GRID section
+6. Provides read-only access to all simulation parameters
+7. Exports config to stdout/file for reproducibility
+
+REQUIREMENTS:
+- Load YAML files using pyyaml (handle multi-line strings, lists, dicts)
+- Validation via Pydantic BaseModel classes:
+  - SIMULATION: Nt (int > 0), dt_out (int > 0), output_dir (str)
+  - DOMAIN: xsize (float > 0), ysize (float > 0)
+  - GRID: spacing as piecewise {x: [dx values], x_breaks: [breakpoints]}
+  - MATERIALS: list of {phase, density, rheology, plasticity, elasticity, thermal}
+  - BC: {top, bot, left, right} each with type and value
+  - PHYSICS: {elasticity: bool, plasticity: bool, thermal: bool}
+  - SOLVER: {Npicard_min, Npicard_max, conv_tol, switch_to_newton}
+- Error messages show WHICH parameter failed and WHY:
+  - ❌ "friction at MATERIALS[1].plasticity.mu = 1.5, expected 0 < μ < 1"
+  - ❌ "Grid spacing must be positive, got -500 at GRID.x_spacing[1]"
+- Create material objects: Material(phase, density, rheology, etc.)
+- Export methods:
+  - `to_dict()`: return full config as nested dict
+  - `to_yaml(filepath)`: save config to YAML file
+  - `to_string()`: return formatted config as printable string
+- Support includes:
+  - Comments in YAML files (preserved for documentation)
+  - Environment variable substitution: `${HOME}/data/file.nc`
+  - Include other YAML files: `!include "base_config.yaml"`
+
+CONSTRAINTS:
+- YAML schema matches SiSteR MATLAB input file structure:
+  ```yaml
+  SIMULATION:
+    Nt: 1600
+    dt_out: 20
+    output_dir: "./results"
+  
+  DOMAIN:
+    xsize: 170e3
+    ysize: 60e3
+  
+  GRID:
+    x_spacing: [2000, 500, 2000]
+    x_breaks: [50e3, 140e3]
+    y_spacing: [2000, 500, 2000]
+    y_breaks: [7e3, 40e3]
+  
+  MATERIALS:
+    - phase: 1
+      name: "Sticky Layer"
+      density:
+        rho0: 1000
+        alpha: 0
+      rheology:
+        type: "ductile"
+        diffusion: {A: 0.5e-18, E: 0, n: 1}
+        dislocation: {A: 0.5e-18, E: 0, n: 1}
+      plasticity: {C: 40e6, mu: 0.6}
+      elasticity: {G: 1e18}
+      thermal: {k: 3, cp: 1000}
+    
+    - phase: 2
+      ...
+  
+  BC:
+    top: {type: "velocity", vx: 1e-10, vy: 0}
+    bot: {type: "velocity", vx: 0, vy: 0}
+    left: {type: "velocity", vx: 1e-10, vy: 0}
+    right: {type: "velocity", vx: 1e-10, vy: 0}
+  
+  PHYSICS:
+    elasticity: true
+    plasticity: true
+    thermal: true
+  
+  SOLVER:
+    Npicard_min: 10
+    Npicard_max: 100
+    conv_tol: 1e-9
+    switch_to_newton: 0
+  ```
+- Use Pydantic v2 for validation (typed, composable)
+- All validation errors collected (not just first, list ALL failures)
+- Package includes example configs: `sister_py/data/examples/*.yaml`
+- Default config: `sister_py/data/defaults.yaml` (hardcoded sensible values)
+
+ACCESSIBILITY:
+- Example YAML files well-documented with inline comments:
+  ```yaml
+  # Grid spacing: three zones with different resolutions
+  # Zone 1: 0 to 50 km at 2000 m spacing
+  # Zone 2: 50 to 140 km at 500 m spacing (fine resolution)
+  # Zone 3: 140 to 170 km at 2000 m spacing
+  x_spacing: [2000, 500, 2000]
+  x_breaks: [50e3, 140e3]
+  ```
+- Validation messages suggest fixes:
+  - "friction coefficient out of range: 1.5 > 1.0, try 0.3-0.6"
+  - "Grid spacing must be > 0, got -500, check zone definitions"
+- Quick start: copy example YAML from GitHub, modify 3-4 parameters
+- Installation: `pip install sister-py` includes examples in `~/.sister_py/`
+- Documentation: "5-Minute Quick Start" guide with YAML walkthrough
+
+ACCEPTANCE_CRITERIA:
+- Load `continental_rift.yaml` without errors (real MATLAB input converted)
+- Reject invalid config with clear error:
+  - μ=1.5 → "friction > 1.0, expected 0 < μ < 1"
+  - viscosity_max < viscosity_min → "bounds reversed"
+  - Grid spacing negative → lists which zone
+- Round-trip: load YAML → modify param → save → load again (bit-identical config)
+- Performance: load 1000-line config in < 100 ms
+- Export: `config.to_yaml(file)` round-trips perfectly (6 sig figs)
+- Create materials: `config.get_materials()` returns dict of Material objects
+
+EXAMPLE_USAGE:
+```python
+from sister_py.config import ConfigurationManager
+
+# Load config from YAML file
+cfg = ConfigurationManager.load("continental_rift.yaml")
+
+# Access nested parameters
+print(cfg.DOMAIN.xsize)  # 170000.0
+print(cfg.MATERIALS[0].density.rho0)  # 1000.0
+
+# Get Material objects ready for simulation
+materials = cfg.get_materials()
+print(materials[1].phase)  # 2
+print(materials[1].viscosity_ductile(...))  # Call rheology
+
+# Modify parameters programmatically
+cfg.SIMULATION.Nt = 100  # Override time steps
+cfg.validate()  # Re-validate
+
+# Export for reproducibility
+cfg.to_yaml("my_run.yaml")
+print(cfg.to_string())  # Print config to stdout
+```

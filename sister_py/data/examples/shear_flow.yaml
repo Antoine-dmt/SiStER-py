@@ -1,0 +1,64 @@
+SIMULATION:
+  Nt: 100
+  dt_out: 10
+  output_dir: "./results_shear"
+
+DOMAIN:
+  xsize: 100e3
+  ysize: 100e3
+
+GRID:
+  x_spacing: [5000]
+  x_breaks: [100e3]
+  y_spacing: [5000]
+  y_breaks: [100e3]
+
+MATERIALS:
+  - phase: 1
+    name: "Viscous Layer"
+    density:
+      rho0: 3000
+      alpha: 0
+    rheology:
+      type: "ductile"
+      diffusion:
+        A: 1e-18
+        E: 0
+        n: 1.0
+    plasticity:
+      C: 0
+      mu: 0.0
+    elasticity:
+      G: 1e10
+    thermal:
+      k: 2.0
+      cp: 1000
+
+BC:
+  top:
+    type: "velocity"
+    vx: 1e-9
+    vy: 0
+  bot:
+    type: "velocity"
+    vx: -1e-9
+    vy: 0
+  left:
+    type: "velocity"
+    vx: 0
+    vy: 0
+  right:
+    type: "velocity"
+    vx: 0
+    vy: 0
+
+PHYSICS:
+  elasticity: false
+  plasticity: false
+  thermal: false
+
+SOLVER:
+  Npicard_min: 3
+  Npicard_max: 10
+  conv_tol: 1e-6
+  switch_to_newton: 0

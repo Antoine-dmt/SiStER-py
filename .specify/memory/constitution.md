@@ -1,50 +1,54 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# SiSteR-py Constitution
+A production-grade geodynamic simulation framework combining fully-staggered grid accuracy, performance optimization, and accessible YAML-based configuration.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Single-File Input Paradigm
+Configuration-driven simulation: one YAML file drives entire execution (mirroring SiSteR MATLAB design). Users modify only config parameters; code unchanged. All simulations must be reproducible via saved config files. YAML format (not JSON) ensures human readability, comments, and version control compatibility.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Fully-Staggered Grid for Accuracy
+Grid method must follow Duretz, May, Gerya (2013) fully-staggered discretization: pressure at cell centers, velocities at maximally-separated face centers (checkerboard pattern). This reduces discretization error by 30-50% vs standard staggered grids, critical for variable viscosity simulations (10¹⁸ to 10²⁵ Pa·s). 7-point compact FD stencil maintains sparsity and solver efficiency.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Performance-First (Numba-Ready Code)
+Every hot loop (grid creation, interpolation, matrix assembly) marked @njit or @vectorize for Numba JIT compilation. Target: grid creation < 10ms (1000×1000 cells), matrix assembly < 100ms. Use NumPy broadcasting exclusively; no nested Python objects in loops. Defer GPU acceleration (CuPy) to Phase 5. Benchmark & profile mandatory before release.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Modular Rheology System
+Physics decoupled into composable modules: DuctileRheology, PlasticRheology, ElasticRheology. Each Material object composes rheology instances; viscosity coupling handled explicitly. New physics models added without modifying existing code. All stress/strain computations vectorized (2D arrays, not element-by-element).
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Test-First Implementation (NON-NEGOTIABLE)
+Unit tests written → acceptance criteria validated → test fails → implementation. Acceptance criteria from prompts are binding. Round-trip testing mandatory (load YAML → run → save → reload → verify identity). Analytical solutions provided for grid/solver validation. Coverage target: > 90% for solver, > 80% overall.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Configuration & Accessibility Standards
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+**YAML Schema**: Must match SiSteR MATLAB input structure (SIMULATION, DOMAIN, GRID, MATERIALS, BC, PHYSICS, SOLVER sections). Validation via Pydantic v2 with granular error messages ("friction at MATERIALS[1].mu = 1.5, expected 0 < μ < 1", not generic "validation failed"). Comments preserved in YAML files. Environment variable substitution supported (${HOME}/data/).
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Material Properties**: SI units throughout (Pa, Pa·s, K, J/mol, m, kg/m³). Temperature in Kelvin, not Celsius. Pre-exponential factor A in [Pa^(-n)·s^(-1)]. Viscosity bounds enforced: 10^18 to 10^25 Pa·s. Friction coefficients: 0 < μ < 1. All parameters with sensible defaults; users override what they need.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Accessibility Requirements**: Example YAML configs in `sister_py/data/examples/`. Docstrings include typical parameter values (e.g., "mid-lithosphere viscosity: 1e20-1e21 Pa·s"). Error messages suggest valid ranges. Installation: `pip install sister-py` includes examples in ~/.sister_py/. Quick-start guide: load example YAML, modify 3-4 parameters, run. Performance: config load < 100 ms.
+
+## Integration & Phase Dependencies
+
+**Execution Order (Strict)**:
+- Phase 0: Config system (Prompt 0A) → foundational
+- Phase 1: Grid (Prompt 1A) + Material (Prompt 2A) + Markers (Prompt 3A) → parallel, each independent
+- Phase 2: Assembly (Prompt 4A) + Solver (Prompt 5A) → sequential (assembly feeds solver)
+- Phase 3: TimeStepper (Prompt 6A) → orchestrates all Phase 1-2
+- Phase 4: Distribution (package structure, CI/CD) → last
+- Phase 5: Optimization (Numba, profiling) → optional
+
+**Component Interfaces**: ConfigurationManager → FullyStaggaredGrid, Material, MarkerSwarm (all receive config objects). All components export to_dict() for serialization. Grid provides index_* and coord_* methods for assembly. Solver receives (matrix, RHS, viscosity) → solution vector.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**Amendment Process**: Constitution changes require explicit justification (error in physics, performance bottleneck, accessibility failure). Amendments trigger version bump (MAJOR for principle removal, MINOR for clarification, PATCH for wording). All PRs reference which principles they satisfy. Code review checklist: (1) Principle compliance, (2) Acceptance criteria met, (3) Tests pass, (4) Docstrings updated.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Compliance Verification**: 
+- Grid creation benchmarked vs 10ms target
+- Interpolation test: constant field → verify exact, linear field → verify to machine precision
+- Config round-trip: load → modify → save → reload → byte-identical
+- Solver convergence: Picard iterations < 100, Newton superlinear
+- All @njit methods compile without error
+
+**Runtime Guidance**: See `.specify/guidance/speckit-phase-workflow.md` for Speckit submission order and prompt customization. See `SPECKIT_PROMPTS_ENHANCED.md` for full prompt templates.
+
+**Version**: 1.0.0 | **Ratified**: 2025-12-06 | **Last Amended**: 2025-12-06

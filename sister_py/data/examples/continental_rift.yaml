@@ -1,0 +1,92 @@
+SIMULATION:
+  Nt: 1600
+  dt_out: 20
+  output_dir: "./results"
+
+DOMAIN:
+  xsize: 170e3
+  ysize: 60e3
+
+GRID:
+  x_spacing: [2000, 500, 2000]
+  x_breaks: [50e3, 140e3]
+  y_spacing: [2000, 500, 2000]
+  y_breaks: [7e3, 40e3]
+
+MATERIALS:
+  - phase: 1
+    name: "Sticky Layer"
+    density:
+      rho0: 1000
+      alpha: 0
+    rheology:
+      type: "ductile"
+      diffusion:
+        A: 0.5e-18
+        E: 0
+        n: 1
+      dislocation:
+        A: 0.5e-18
+        E: 0
+        n: 1
+    plasticity:
+      C: 40e6
+      mu: 0.6
+    elasticity:
+      G: 1e18
+    thermal:
+      k: 3
+      cp: 1000
+
+  - phase: 2
+    name: "Mantle"
+    density:
+      rho0: 3300
+      alpha: 3e-5
+    rheology:
+      type: "ductile"
+      diffusion:
+        A: 1e-21
+        E: 400e3
+        n: 3.5
+      dislocation:
+        A: 1.9e-16
+        E: 540e3
+        n: 3.5
+    plasticity:
+      C: 0
+      mu: 0.6
+    elasticity:
+      G: 6.4e10
+    thermal:
+      k: 4.5
+      cp: 1250
+
+BC:
+  top:
+    type: "velocity"
+    vx: 1e-10
+    vy: 0
+  bot:
+    type: "velocity"
+    vx: 0
+    vy: 0
+  left:
+    type: "velocity"
+    vx: 1e-10
+    vy: 0
+  right:
+    type: "velocity"
+    vx: 1e-10
+    vy: 0
+
+PHYSICS:
+  elasticity: true
+  plasticity: true
+  thermal: true
+
+SOLVER:
+  Npicard_min: 10
+  Npicard_max: 100
+  conv_tol: 1e-9
+  switch_to_newton: 0

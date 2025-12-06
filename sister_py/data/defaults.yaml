@@ -1,0 +1,64 @@
+SIMULATION:
+  Nt: 1000
+  dt_out: 50
+  output_dir: "./results"
+
+DOMAIN:
+  xsize: 100e3
+  ysize: 100e3
+
+GRID:
+  x_spacing: [5000]
+  x_breaks: [100e3]
+  y_spacing: [2000, 1000, 2000]
+  y_breaks: [30e3, 70e3]
+
+MATERIALS:
+  - phase: 1
+    name: "Generic Material"
+    density:
+      rho0: 2800
+      alpha: 2.5e-5
+    rheology:
+      type: "ductile"
+      dislocation:
+        A: 1e-16
+        E: 500e3
+        n: 3.0
+    plasticity:
+      C: 10e6
+      mu: 0.4
+    elasticity:
+      G: 5e10
+    thermal:
+      k: 3.0
+      cp: 1000
+
+BC:
+  top:
+    type: "stress"
+    sxx: 1e6
+    sxy: 0
+  bot:
+    type: "stress"
+    sxx: 1e6
+    sxy: 0
+  left:
+    type: "velocity"
+    vx: 0
+    vy: 0
+  right:
+    type: "velocity"
+    vx: 0
+    vy: 0
+
+PHYSICS:
+  elasticity: true
+  plasticity: true
+  thermal: false
+
+SOLVER:
+  Npicard_min: 5
+  Npicard_max: 50
+  conv_tol: 1e-7
+  switch_to_newton: 10
