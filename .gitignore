@@ -62,3 +62,57 @@ pytest.ini
 /list/
 demo_output.txt
 .specify/
+
+# Environment variables and local config
+.env
+.env.local
+*.env
+.vscode/settings.json
+.vscode/launch.json
+
+# OS files
+.DS_Store
+Thumbs.db
+*.lnk
+
+# Fortran build artifacts
+*.o
+*.mod
+*.exe
+acflac
+
+# Build outputs
+/build/
+/dist/
+*.so
+*.a
+*.dylib
+
+# Temporary/intermediate files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+
+# Logs
+*.log
+logs/
+debug_*.txt
+
+# Cache directories
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated documentation
+/site/
+/htmlcov/
+
+# Local development files (don't commit)
+local_config.py
+test_output/
+scratch/
+*.ipynb_checkpoints/
