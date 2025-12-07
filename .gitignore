@@ -62,6 +62,7 @@ pytest.ini
 /list/
 demo_output.txt
 .specify/
+SiStER-master/
 
 # Environment variables and local config
 .env
